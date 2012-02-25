@@ -18,27 +18,43 @@
         },
         
         walk: function(x, y, w, h, from) {
-            this.iterations++;
-            console.log(this.iterations, x, y, w, h, from);
+            var self = this;
+            $.ajax('srv/getcolor.php', {
+                data: {
+                    'from': from
+                },
+                success: function(data) {
+                    var color = data.term + '';
+                    var colorId = data.id;
+                    
+                    // console.log(color, x, y, w, h, from, colorId);
+                    
+                    self.ctx.fillStyle = color;
+                    self.ctx.fillRect(x, y, w, h);
 
-            $.ajax({
-                
+                    if (w <= 10 && h <= 10) {
+                        return;
+                    }
+
+                    var hw = Math.round(w/2);
+                    var hh = Math.round(h/2);
+
+                    setTimeout(function(){
+
+                        // top-left
+                        self.walk(x, y, hw, hh, colorId);
+                        // top-right
+                        self.walk(x+hw, y, hw, hh, colorId);
+                        // bottom-right
+                        self.walk(x+hw, y+hh, hw, hh, colorId);
+                        // bottom-left
+                        self.walk(x, y+hh, hw, hh, colorId);
+
+                    }, 100)
+                }
             });
 
-            this.ctx.fillStyle = color;
-            this.ctx.fillRect(x, y, w, h);
 
-            if (w <= 1 && h <= 1) {
-                return;
-            }
-            
-            var newW = Math.ceil(w/2);
-            var newH = Math.ceil(h/2);
-            
-            this.walk(0, 0, newW, newH, from); // TL
-            this.walk(newW, 0, newW, newH); // TR
-            this.walk(newW, newH, newW, newH); // BR
-            this.walk(0, newH, newW, newH); // BL
         },
         
         randColor: function() {

@@ -16,8 +16,11 @@ class Parser {
     }
 
     function loadFile($filename) {
-        // TODO: load image based on extension
-        return imagecreatefrompng($filename);
+        if (strpos($filename, '.jpg') || strpos($filename, '.jpeg')) {
+            return imagecreatefromjpeg($filename);
+        } else {
+            return imagecreatefrompng($filename);
+        }
     }
 
     function process($filename) {
@@ -36,7 +39,7 @@ class Parser {
         $hw = intval($w/2);
         $hh = intval($h/2);
         
-        if ($hw == 0 && $hh == 0) {
+        if ($hw <= 10 && $hh <= 10) {
             // nowhere else to go...
             return;
         }
@@ -65,12 +68,18 @@ class Parser {
         $imageTmp = imagecreatetruecolor(1, 1);
         imagecopyresampled($imageTmp, $image, 0, 0, $x, $y, 1, 1, $w, $h);
 
-        $rgb = imagecolorat($imageTmp, 0, 0);
-        $r = round((($rgb >> 16) & 0xFF) / self::CHUNKSIZE);
-        $g = round((($rgb >> 8) & 0xFF) / self::CHUNKSIZE);
-        $b = round(($rgb & 0xFF) / self::CHUNKSIZE);
+        $index = imagecolorat($imageTmp, 0, 0);
+        $colors = imagecolorsforindex($imageTmp, $index);
         
-        return sprintf("#%02x%02x%02x", $r, $g, $b);
+        $rgb = sprintf(
+            "#%02x%02x%02x",
+            $colors['red'],
+            $colors['green'],
+            $colors['blue']
+        );
+        
+        error_log("[$x, $y][$w, $h] $rgb");
+        return $rgb;
     }
 
 }
