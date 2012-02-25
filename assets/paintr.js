@@ -36,8 +36,8 @@
                         return;
                     }
 
-                    var hw = Math.round(w/2);
-                    var hh = Math.round(h/2);
+                    var hw = Math.ceil(w/2);
+                    var hh = Math.ceil(h/2);
 
                     setTimeout(function(){
 
