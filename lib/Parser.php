@@ -70,7 +70,7 @@ class Parser {
         $index = imagecolorat($imageTmp, 0, 0);
         $colors = imagecolorsforindex($imageTmp, $index);
         
-        $scaling = min($w, 4);
+        $scaling = min($w, 3);
         // $scaling = 1;
         
         $rgb = sprintf(

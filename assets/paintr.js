@@ -13,49 +13,60 @@
         paint: function() {
             var w = this.canvas.width;
             var h = this.canvas.height;
-            this.iterations = 0;
             this.walk(0, 0, w, h, 0, 0);
         },
         
-        walk: function(x, y, w, h, from, pos) {
+        walk: function(mainx, mainy, mainw, mainh, from, pos) {
             var self = this;
-            $.ajax('srv/getcolor.php', {
+            var max_depth = 8;
+            
+            $.ajax('srv/getimage.php', {
                 data: {
+                    'max': max_depth,
+                    'width': mainw,
+                    'height': mainh,
                     'from': from,
                     'pos': pos
                 },
                 success: function(data) {
-                    var color = data.term + '';
-                    var colorId = data.id;
-                    
-                    // console.log(color, x, y, w, h, from, colorId);
-                    
-                    self.ctx.fillStyle = color;
-                    self.ctx.fillRect(x, y, w, h);
+                    if (data) {
+                        for (i in data) {
+                            var rec = data[i];
+              
+                            var x = rec[0];
+                            var y = rec[1];
+                            var w = rec[2];
+                            var h = rec[3];
+                            var color = rec[4];
+                            var depth = rec[5];
+                            var pos = rec[6];
+                            var color_id = rec[7];
 
-                    if (w <= 1 || h <= 1) {
-                        return;
+                            self.ctx.fillStyle = color;
+                            self.ctx.fillRect(
+                                mainx+x, mainy+y,
+                                w, h
+                            );
+
+                            // if (depth == max_depth &&
+                            //     w > 4 && h > 4) {
+                            //     self.goDeeper(
+                            //         mainx+x, mainy+y, 
+                            //         w, h, 
+                            //         color_id, pos
+                            //     );
+                            // }
+                        }
                     }
-
-                    var hw = Math.ceil(w/2);
-                    var hh = Math.ceil(h/2);
-
-                    setTimeout(function(){
-
-                        // top-left
-                        self.walk(x, y, hw, hh, colorId, 1);
-                        // top-right
-                        self.walk(x+hw, y, hw, hh, colorId, 2);
-                        // bottom-right
-                        self.walk(x+hw, y+hh, hw, hh, colorId,3 );
-                        // bottom-left
-                        self.walk(x, y+hh, hw, hh, colorId, 4);
-
-                    }, 100)
                 }
             });
-
-
+        },
+        
+        goDeeper: function(x, y, w, h, color_id, pos) {
+            var self = this;
+            setTimeout(function(){
+                self.walk(x, y, w, h, color_id, pos);
+            })
         },
         
         randColor: function() {
