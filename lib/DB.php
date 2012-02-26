@@ -15,11 +15,12 @@ class DB {
     const NEW_NODE = "INSERT INTO node (term) VALUES (?)";
 
     const NEW_EDGE = <<<'EOL'
-INSERT INTO edge (stream_id, from_id, to_id, rank, myrand) VALUES (?, ?, ?, 1, cast(rand()*10000 as unsigned)) 
+INSERT INTO edge (stream_id, from_id, to_id, pos, rank) VALUES (?, ?, ?, ?, 1) 
 ON DUPLICATE KEY UPDATE rank=rank+1
 EOL;
 
-    const GET_EDGES = "SELECT * FROM edge WHERE stream_id=? AND from_id=?";
+    const GET_EDGES = "SELECT * FROM edge WHERE stream_id=? AND from_id=? AND pos=?";
+    const GET_EDGES_NO_POS = "SELECT * FROM edge WHERE stream_id=? AND from_id=?";
 
     protected $dbh;
 
@@ -64,14 +65,20 @@ EOL;
         }
     }
 
-    function addEdge($streamId, $fromId, $toId) {
+    function addEdge($streamId, $fromId, $toId, $pos) {
         $query = $this->dbh->prepare(self::NEW_EDGE);
-        $query->execute(array($streamId, $fromId, $toId));
+        $query->execute(array($streamId, $fromId, $toId, $pos));
     }
 
-    function getRandomEdge($streamId, $fromId) {
-        $query = $this->dbh->prepare(self::GET_EDGES);
-        $query->execute(array($streamId, $fromId));
+    function getRandomEdge($streamId, $fromId, $pos=0) {
+        
+        if ($pos > 0) {
+            $query = $this->dbh->prepare(self::GET_EDGES);
+            $query->execute(array($streamId, $fromId, $pos));
+        } else {
+            $query = $this->dbh->prepare(self::GET_EDGES_NO_POS);
+            $query->execute(array($streamId, $fromId));
+        }
 
         $picked = null;
         $count = 0;
@@ -80,7 +87,7 @@ EOL;
             $max = $count + $rec['rank'];
             $rand = rand(1, $max);
 
-            error_log("RAND $max $rand");
+            // error_log("RAND $max $rand");
 
             if ($rand > $count && $rand <= $max) {
                 $picked = $rec;
@@ -93,6 +100,9 @@ EOL;
             return $picked;
         } else if (isset($rec)) {
             return $rec;
+        } else if ($pos > 0) {
+            error_log("RETRY WITH NO POS $streamId $fromId $pos");
+            return $this->getRandomEdge($streamId, $fromId);
         } else {
             return null;
         }

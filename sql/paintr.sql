@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.5.11, for osx10.6 (i386)
 --
--- Host: localhost    Database: tootr
+-- Host: localhost    Database: paintr
 -- ------------------------------------------------------
 -- Server version	5.5.11
 
@@ -28,12 +28,12 @@ CREATE TABLE `edge` (
   `stream_id` int(10) unsigned NOT NULL,
   `from_id` int(10) unsigned NOT NULL,
   `to_id` int(10) unsigned NOT NULL,
+  `pos` int(4) DEFAULT NULL,
   `rank` int(4) DEFAULT NULL,
-  `myrand` int(4) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `stream_id` (`stream_id`,`from_id`,`to_id`),
+  UNIQUE KEY `stream_id` (`stream_id`,`from_id`,`to_id`,`pos`),
   KEY `updated` (`updated`)
-) ENGINE=MyISAM AUTO_INCREMENT=63297 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,7 +48,7 @@ CREATE TABLE `node` (
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `term` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=17307 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -63,7 +63,7 @@ CREATE TABLE `stream` (
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `name` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -75,4 +75,4 @@ CREATE TABLE `stream` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-01-28 16:04:18
+-- Dump completed on 2012-02-25 18:31:37

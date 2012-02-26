@@ -14,14 +14,15 @@
             var w = this.canvas.width;
             var h = this.canvas.height;
             this.iterations = 0;
-            this.walk(0, 0, w, h, 0);
+            this.walk(0, 0, w, h, 0, 0);
         },
         
-        walk: function(x, y, w, h, from) {
+        walk: function(x, y, w, h, from, pos) {
             var self = this;
             $.ajax('srv/getcolor.php', {
                 data: {
-                    'from': from
+                    'from': from,
+                    'pos': pos
                 },
                 success: function(data) {
                     var color = data.term + '';
@@ -32,7 +33,7 @@
                     self.ctx.fillStyle = color;
                     self.ctx.fillRect(x, y, w, h);
 
-                    if (w <= 10 && h <= 10) {
+                    if (w <= 1 || h <= 1) {
                         return;
                     }
 
@@ -42,13 +43,13 @@
                     setTimeout(function(){
 
                         // top-left
-                        self.walk(x, y, hw, hh, colorId);
+                        self.walk(x, y, hw, hh, colorId, 1);
                         // top-right
-                        self.walk(x+hw, y, hw, hh, colorId);
+                        self.walk(x+hw, y, hw, hh, colorId, 2);
                         // bottom-right
-                        self.walk(x+hw, y+hh, hw, hh, colorId);
+                        self.walk(x+hw, y+hh, hw, hh, colorId,3 );
                         // bottom-left
-                        self.walk(x, y+hh, hw, hh, colorId);
+                        self.walk(x, y+hh, hw, hh, colorId, 4);
 
                     }, 100)
                 }

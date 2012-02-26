@@ -4,7 +4,7 @@ namespace Paintr;
 
 class Parser {
 
-    const CHUNKSIZE = 32;
+    const COLORCHUNK = 5;
 
     protected $db;
     protected $streamId;
@@ -31,10 +31,9 @@ class Parser {
         $this->parse($image, 0, 0, $w, $h);
     }
     
-    function parse($image, $x, $y, $w, $h, $from=null) {
+    function parse($image, $x, $y, $w, $h, $from=null, $pos=0) {
         $color = $this->getAvgColor($image, $x, $y, $w, $h);
-        $this->addEdge($from, $color);
-
+        $this->addEdge($from, $color, $pos);
         
         $hw = intval($w/2);
         $hh = intval($h/2);
@@ -45,23 +44,23 @@ class Parser {
         }
         
         // top-left
-        $this->parse($image, $x, $y, $hw, $hh, $color);
+        $this->parse($image, $x, $y, $hw, $hh, $color, 1);
         // top-right
-        $this->parse($image, $x+$hw, $y, $hw, $hh, $color);
+        $this->parse($image, $x+$hw, $y, $hw, $hh, $color, 2);
         // bottom-right
-        $this->parse($image, $x+$hw, $y+$hh, $hw, $hh, $color);
+        $this->parse($image, $x+$hw, $y+$hh, $hw, $hh, $color, 3);
         // bottom-left
-        $this->parse($image, $x, $y+$hh, $hw, $hh, $color);
+        $this->parse($image, $x, $y+$hh, $hw, $hh, $color, 4);
     }
 
-    function addEdge($from, $to) {
+    function addEdge($from, $to, $pos) {
         if (!empty($from)) {
             $fromId = $this->db->getNodeId($from);
         } else {
             $fromId = 0;
         }
         $toId = $this->db->getNodeId($to);
-        $this->db->addEdge($this->streamId, $fromId, $toId);
+        $this->db->addEdge($this->streamId, $fromId, $toId, $pos);
     }
 
     function getAvgColor($image, $x, $y, $w, $h) {
@@ -71,11 +70,14 @@ class Parser {
         $index = imagecolorat($imageTmp, 0, 0);
         $colors = imagecolorsforindex($imageTmp, $index);
         
+        $scaling = min($w, 4);
+        // $scaling = 1;
+        
         $rgb = sprintf(
             "#%02x%02x%02x",
-            $colors['red'],
-            $colors['green'],
-            $colors['blue']
+            intval($colors['red'] / $scaling) * $scaling,
+            intval($colors['green'] / $scaling) * $scaling,
+            intval($colors['blue'] / $scaling) * $scaling
         );
         
         error_log("[$x, $y][$w, $h] $rgb");
