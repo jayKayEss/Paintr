@@ -4,7 +4,8 @@ namespace Paintr;
 
 class Parser {
 
-    const COLORCHUNK = 5;
+    const COLORCHUNK = 4;
+    const MAXDEPTH = 7;
 
     protected $db;
     protected $streamId;
@@ -32,13 +33,15 @@ class Parser {
     }
     
     function parse($image, $x, $y, $w, $h, $from=null, $pos=0, $depth=1) {
-        $color = $this->getAvgColor($image, $x, $y, $w, $h);
+        $scaling = pow(self::MAXDEPTH - $depth + 1, 1.8);
+        $color = $this->getAvgColor($image, $x, $y, $w, $h, $scaling);
+        // $color = $this->getAvgColor($image, $x, $y, $w, $h, 1);
         $this->addEdge($from, $color, $pos);
         
         $hw = intval($w/2);
         $hh = intval($h/2);
         
-        if ($depth > 8 || ($hw <= 10 && $hh <= 10)) {
+        if ($depth >= self::MAXDEPTH || ($hw <= 1 || $hh <= 1)) {
             // nowhere else to go...
             return;
         }
@@ -63,15 +66,12 @@ class Parser {
         $this->db->addEdge($this->streamId, $fromId, $toId, $pos);
     }
 
-    function getAvgColor($image, $x, $y, $w, $h) {
+    function getAvgColor($image, $x, $y, $w, $h, $scaling) {
         $imageTmp = imagecreatetruecolor(1, 1);
         imagecopyresampled($imageTmp, $image, 0, 0, $x, $y, 1, 1, $w, $h);
 
         $index = imagecolorat($imageTmp, 0, 0);
         $colors = imagecolorsforindex($imageTmp, $index);
-        
-        $scaling = min($w, 3);
-        // $scaling = 1;
         
         $rgb = sprintf(
             "#%02x%02x%02x",
@@ -80,7 +80,7 @@ class Parser {
             intval($colors['blue'] / $scaling) * $scaling
         );
         
-        error_log("[$x, $y][$w, $h] $rgb");
+        error_log("[$x, $y][$w, $h] $rgb @$scaling");
         return $rgb;
     }
 

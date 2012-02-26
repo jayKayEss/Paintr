@@ -58,6 +58,10 @@
                             // }
                         }
                     }
+                    
+                    setTimeout(function(){
+                        self.paint();
+                    }, 5000);
                 }
             });
         },
@@ -81,10 +85,11 @@
     
     $(document).ready(function(){
         var paintr = new Paintr('#theCanvas');
-        
-        setInterval(function(){
-            paintr.paint();
-        }, 10000);
+
+        paintr.paint();
+        // setInterval(function(){
+        //     paintr.paint();
+        // }, 5000);
         
     });
     
