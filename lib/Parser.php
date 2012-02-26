@@ -31,26 +31,26 @@ class Parser {
         $this->parse($image, 0, 0, $w, $h);
     }
     
-    function parse($image, $x, $y, $w, $h, $from=null, $pos=0) {
+    function parse($image, $x, $y, $w, $h, $from=null, $pos=0, $depth=1) {
         $color = $this->getAvgColor($image, $x, $y, $w, $h);
         $this->addEdge($from, $color, $pos);
         
         $hw = intval($w/2);
         $hh = intval($h/2);
         
-        if ($hw <= 10 && $hh <= 10) {
+        if ($depth > 8 || ($hw <= 10 && $hh <= 10)) {
             // nowhere else to go...
             return;
         }
         
         // top-left
-        $this->parse($image, $x, $y, $hw, $hh, $color, 1);
+        $this->parse($image, $x, $y, $hw, $hh, $color, 1, $depth+1);
         // top-right
-        $this->parse($image, $x+$hw, $y, $hw, $hh, $color, 2);
+        $this->parse($image, $x+$hw, $y, $hw, $hh, $color, 2, $depth+1);
         // bottom-right
-        $this->parse($image, $x+$hw, $y+$hh, $hw, $hh, $color, 3);
+        $this->parse($image, $x+$hw, $y+$hh, $hw, $hh, $color, 3, $depth+1);
         // bottom-left
-        $this->parse($image, $x, $y+$hh, $hw, $hh, $color, 4);
+        $this->parse($image, $x, $y+$hh, $hw, $hh, $color, 4, $depth+1);
     }
 
     function addEdge($from, $to, $pos) {

@@ -82,9 +82,10 @@
     $(document).ready(function(){
         var paintr = new Paintr('#theCanvas');
         
-        $('#go').click(function(){
+        setInterval(function(){
             paintr.paint();
-        });
+        }, 10000);
+        
     });
     
 })(jQuery);
