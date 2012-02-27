@@ -96,16 +96,11 @@ EOL;
             $count = $max;
         }
 
-        if (isset($picked)) {
-            return $picked;
-        } else if (isset($rec)) {
-            return $rec;
-        } else if ($pos > 0) {
-            error_log("RETRY WITH NO POS $streamId $fromId $pos");
-            return $this->getRandomEdge($streamId, $fromId);
-        } else {
-            return null;
+        if (!$picked) {
+            $picked = $rec;
         }
+
+        return $picked;
     }
 
 }

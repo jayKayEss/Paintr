@@ -1,5 +1,7 @@
 <?php
 
+$numphotos = 13;
+
 $flickr = 'http://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=4a1a4fcfe5cc7e2953badcbd76812a02&format=json&nojsoncallback=1&text=%s&sort=relevance&page=%d';
 
 // farm server-id id secret
@@ -30,11 +32,15 @@ function getFlickr($terms, $page) {
 }
 
 $page = 1;
+$count = 1;
 while (1) {
     $max_pages = getFlickr('american+flag', $page);
     if ($page < $max_pages) {
         $page++;
     } else {
+        break;
+    }
+    if (++$count >= $numphotos) {
         break;
     }
 }

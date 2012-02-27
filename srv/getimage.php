@@ -27,8 +27,9 @@ function render($i=1, $x=0, $y=0, $w=1, $h=1, $from=0, $pos=0) {
     $edge = $db->getRandomEdge($streamId, $from, $pos);
     // $edge = $db->getRandomEdge($streamId, $from);
 
-    if (empty($edge)) {
-        return;
+    if ((empty($edge) || $edge['id'] == $from) && $i <= 3) {
+        error_log("BAILOUT RESTART CHAIN $i");
+        $edge = $db->getRandomEdge($streamId, 0);
     }
 
     $next = $db->getNode($edge['to_id']);
