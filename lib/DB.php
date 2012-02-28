@@ -10,19 +10,16 @@ class DB {
     const GET_STREAM = "SELECT id FROM stream WHERE name=?";
     const NEW_STREAM = "INSERT INTO stream (name) VALUES (?)";
 
-    const GET_NODE = "SELECT id FROM node WHERE term=?";
-    const GET_NODE_BY_ID = "SELECT * FROM node WHERE id=?";
-    const NEW_NODE = "INSERT INTO node (term) VALUES (?)";
-
-    const NEW_EDGE = <<<'EOL'
-INSERT INTO edge (stream_id, from_id, to_id, pos, rank) VALUES (?, ?, ?, ?, 1) 
-ON DUPLICATE KEY UPDATE rank=rank+1
-EOL;
-
-    const GET_EDGES = "SELECT * FROM edge WHERE stream_id=? AND from_id=? AND pos=?";
-    const GET_EDGES_NO_POS = "SELECT * FROM edge WHERE stream_id=? AND from_id=?";
+    const GET_EDGES = "SELECT * FROM edge WHERE stream_id=? AND color_from=? AND pos=?";
+    const GET_EDGES_NO_POS = "SELECT * FROM edge WHERE stream_id=? AND color_from=?";
+    const STORE_EDGE = <<<EOF
+INSERT INTO edge (stream_id, color_from, pos, data) VALUES (?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE data = CONCAT_WS(',', data, ?)
+EOF;
 
     protected $dbh;
+    protected $edge_kitty;
+    protected $node_cache;
 
     function __construct() {
        $this->dbh = new \PDO('mysql:host=127.0.0.1;dbname=paintr', self::USER, self::PASS); 
@@ -65,42 +62,53 @@ EOL;
         }
     }
 
-    function addEdge($streamId, $fromId, $toId, $pos) {
-        $query = $this->dbh->prepare(self::NEW_EDGE);
-        $query->execute(array($streamId, $fromId, $toId, $pos));
+    function addEdge($streamId, $colorFrom, $colorTo, $pos) {
+        if (!isset($this->edge_kitty["$streamId:$colorFrom:$pos"])) {
+            $this->edge_kitty["$streamId:$colorFrom:$pos"] = "";
+        }
+
+        $this->edge_kitty["$streamId:$colorFrom:$pos"] .= "$colorTo,";
+    }
+    
+    function storeEdges() {
+        $query = $this->dbh->prepare(self::STORE_EDGE);
+        
+        foreach ($this->edge_kitty as $key => $data) {
+            list ($stream_id, $color_from, $pos) = explode(':', $key);
+            $data = rtrim($data, ',');
+            $query->execute(array($stream_id, $color_from, $pos, $data, $data));
+        }
+        
+        $this->edge_kitty = array();
     }
 
-    function getRandomEdge($streamId, $fromId, $pos=0) {
+    function getRandomEdge($streamId, $colorFrom, $pos=0) {
+        // error_log("GET RAND EDGE [$streamId] [$colorFrom] [$pos]");
+        if (empty($colorFrom)) {
+            $colorFrom = '';
+        }
         
         if ($pos > 0) {
             $query = $this->dbh->prepare(self::GET_EDGES);
-            $query->execute(array($streamId, $fromId, $pos));
+            $query->execute(array($streamId, $colorFrom, $pos));
         } else {
             $query = $this->dbh->prepare(self::GET_EDGES_NO_POS);
-            $query->execute(array($streamId, $fromId));
+            $query->execute(array($streamId, $colorFrom));
         }
 
-        $picked = null;
-        $count = 0;
+        $alledges = array();
 
         while ($rec = $query->fetch(\PDO::FETCH_ASSOC)) {
-            $max = $count + $rec['rank'];
-            $rand = rand(1, $max);
-
-            // error_log("RAND $max $rand");
-
-            if ($rand > $count && $rand <= $max) {
-                $picked = $rec;
-            }
-
-            $count = $max;
+            $edges = explode(',', $rec['data']);
+            $alledges = array_merge($alledges, $edges);
         }
 
-        if (!$picked) {
-            $picked = $rec;
+        if (!empty($alledges)) {
+            $idx = mt_rand(0, count($alledges)-1);
+            return $alledges[$idx];
+        } else {
+            return null;
         }
-
-        return $picked;
     }
 
 }

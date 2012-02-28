@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.11, for osx10.6 (i386)
+-- MySQL dump 10.13  Distrib 5.1.53, for apple-darwin10.3.0 (i386)
 --
 -- Host: localhost    Database: paintr
 -- ------------------------------------------------------
--- Server version	5.5.11
+-- Server version	5.1.53
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -23,31 +23,11 @@ DROP TABLE IF EXISTS `edge`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `edge` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `stream_id` int(10) unsigned NOT NULL,
-  `from_id` int(10) unsigned NOT NULL,
-  `to_id` int(10) unsigned NOT NULL,
-  `pos` int(4) DEFAULT NULL,
-  `rank` int(4) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `stream_id` (`stream_id`,`from_id`,`to_id`,`pos`),
-  KEY `updated` (`updated`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `node`
---
-
-DROP TABLE IF EXISTS `node`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `node` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `term` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  `color_from` char(7) NOT NULL DEFAULT '',
+  `pos` tinyint(1) NOT NULL DEFAULT '0',
+  `data` text,
+  PRIMARY KEY (`stream_id`,`color_from`,`pos`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -63,7 +43,7 @@ CREATE TABLE `stream` (
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `name` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -75,4 +55,4 @@ CREATE TABLE `stream` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-02-25 18:31:37
+-- Dump completed on 2012-02-27 22:52:08

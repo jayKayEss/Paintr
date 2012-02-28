@@ -1,15 +1,53 @@
 <?php
 
-namespace Paintr;
+class Fubar {
+    
+    const MAXDEPTH = 3;
+    
+    function parse($x=0, $y=0, $pos=0, $depth=0) {
+        $n = pow(2, $depth);
+        print "[$x, $y] $pos @$depth {$n}x{$n}\n";
 
-require_once dirname(__FILE__).'/../lib/Consts.php';
-require_once dirname(__FILE__).'/../lib/DB.php';
-require_once dirname(__FILE__).'/../lib/Parser.php';
-require_once dirname(__FILE__).'/../lib/Generator.php';
+        print "  ";
+        for ($xx=0; $xx<$n; $xx++) {
+            print "$xx";
+        }
+        print "\n";
+        
+        for ($yy=0; $yy<$n; $yy++) {
+            print "$yy ";
+            for ($xx=0; $xx<$n; $xx++) {
+                if ($xx==$x && $yy==$y) {
+                    print "$pos";
+                } else {
+                    print "-";
+                }
+            }
+            print "\n";
+        }
+        
+        print "\n\n";
+        
+        if ($depth >= self::MAXDEPTH) {
+            // nowhere else to go...
+            return;
+        }
+        
+        $depth++;
+        $x *= 2;
+        $y *= 2;
+        
+        // top-left
+        $this->parse($x, $y, 1, $depth);
+        // top-right
+        $this->parse($x+1, $y, 2, $depth);
+        // bottom-right
+        $this->parse($x+1, $y+1, 3, $depth);
+        // bottom-left
+        $this->parse($x, $y+1, 4, $depth);
+    }
+    
+}
 
-$db = new DB();
-
-$filename = $argv[1];
-
-$parser = new Parser($db, 'everything');
-$parser->process($filename);
+$fffuuu = new Fubar();
+$fffuuu->parse();

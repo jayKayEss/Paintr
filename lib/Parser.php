@@ -10,6 +10,7 @@ class Parser {
     protected $db;
     protected $streamId;
     protected $image;
+    protected $resampled;
 
     function __construct($db, $streamName) {
         $this->db = $db;
@@ -18,59 +19,54 @@ class Parser {
 
     function loadFile($filename) {
         if (strpos($filename, '.jpg') || strpos($filename, '.jpeg')) {
-            return imagecreatefromjpeg($filename);
+            $this->image = imagecreatefromjpeg($filename);
         } else {
-            return imagecreatefrompng($filename);
+            $this->image = imagecreatefrompng($filename);
         }
     }
 
     function process($filename) {
-        $image = $this->loadFile($filename);
-        $w = imagesx($image) - 1;
-        $h = imagesy($image) - 1;
-        
-        $this->parse($image, 0, 0, $w, $h);
+        $this->loadFile($filename);
+        $this->precacheImages();
+        $this->parse();
+        $this->db->storeEdges();
     }
     
-    function parse($image, $x, $y, $w, $h, $from=null, $pos=0, $depth=1) {
-        $scaling = pow(self::MAXDEPTH - $depth + 1, 1.8);
-        $color = $this->getAvgColor($image, $x, $y, $w, $h, $scaling);
-        // $color = $this->getAvgColor($image, $x, $y, $w, $h, 1);
+    function parse($x=0, $y=0, $from=null, $pos=0, $depth=0) {
+        $scaling = pow(self::MAXDEPTH - $depth + 1, 1.2);
+        $color = $this->getAvgColor($depth, $x, $y, $scaling);
         $this->addEdge($from, $color, $pos);
         
-        $hw = intval($w/2);
-        $hh = intval($h/2);
-        
-        if ($depth >= self::MAXDEPTH || ($hw <= 1 || $hh <= 1)) {
+        if ($depth >= self::MAXDEPTH) {
             // nowhere else to go...
             return;
         }
         
+        $depth++;
+        $x *= 2;
+        $y *= 2;
+        
         // top-left
-        $this->parse($image, $x, $y, $hw, $hh, $color, 1, $depth+1);
+        $this->parse($x, $y, $color, 1, $depth);
         // top-right
-        $this->parse($image, $x+$hw, $y, $hw, $hh, $color, 2, $depth+1);
+        $this->parse($x+1, $y, $color, 2, $depth);
         // bottom-right
-        $this->parse($image, $x+$hw, $y+$hh, $hw, $hh, $color, 3, $depth+1);
+        $this->parse($x+1, $y+1, $color, 3, $depth);
         // bottom-left
-        $this->parse($image, $x, $y+$hh, $hw, $hh, $color, 4, $depth+1);
+        $this->parse($x, $y+1, $color, 4, $depth);
     }
 
     function addEdge($from, $to, $pos) {
-        if (!empty($from)) {
-            $fromId = $this->db->getNodeId($from);
-        } else {
-            $fromId = 0;
+        if (empty($from)) {
+            $from = '';
         }
-        $toId = $this->db->getNodeId($to);
-        $this->db->addEdge($this->streamId, $fromId, $toId, $pos);
+        $this->db->addEdge($this->streamId, $from, $to, $pos);
     }
 
-    function getAvgColor($image, $x, $y, $w, $h, $scaling) {
-        $imageTmp = imagecreatetruecolor(1, 1);
-        imagecopyresampled($imageTmp, $image, 0, 0, $x, $y, 1, 1, $w, $h);
+    function getAvgColor($depth, $x, $y, $scaling) {
+        $imageTmp = $this->resampled[$depth];
 
-        $index = imagecolorat($imageTmp, 0, 0);
+        $index = imagecolorat($imageTmp, $x, $y);
         $colors = imagecolorsforindex($imageTmp, $index);
         
         $rgb = sprintf(
@@ -80,8 +76,23 @@ class Parser {
             intval($colors['blue'] / $scaling) * $scaling
         );
         
-        error_log("[$x, $y][$w, $h] $rgb @$scaling");
+        // error_log("$depth [$x, $y] $rgb @$scaling");
         return $rgb;
     }
 
+    function precacheImages() {
+        $w = imagesx($this->image);
+        $h = imagesy($this->image);
+        
+        for ($depth=0; $depth<=self::MAXDEPTH; $depth++) {
+            $dim = pow(2, $depth);
+            $resampled = imagecreatetruecolor($dim, $dim);
+            imagecopyresampled(
+                $resampled, $this->image, 
+                0, 0, 0, 0, 
+                $dim, $dim, $w, $h
+            );
+            $this->resampled[$depth] = $resampled;
+        }
+    }
 }

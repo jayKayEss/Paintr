@@ -7,7 +7,7 @@ $flickr = 'http://api.flickr.com/services/rest/?method=flickr.photos.search&api_
 // farm server-id id secret
 $photo_url = 'http://farm%s.staticflickr.com/%s/%s_%s.jpg';
 
-$process = realpath(dirname(__FILE__)."/test.php");
+$process = realpath(dirname(__FILE__)."/process.php");
 $kitty = realpath(dirname(__FILE__)."/../flickr");
 
 function getFlickr($terms, $page) {
